@@ -47,18 +47,18 @@ export default function App() {
         console.log("Error in parsing json", err);
       }
     };
-    reader.readAsText(e.target.files[0]);
+    reader.readAsText((e.target.files ?? [])[0]);
   }, []);
 
   // Handle opacity change
-  const handleOpacityChange = useCallback((pos, index) => {
+  const handleOpacityChange = useCallback((pos: { x: number, y: number }, index: number) => {
     setOpacities((prevOpacities) =>
       prevOpacities.map((opacity, i) => (i === index ? pos.x : opacity))
     );
   }, []);
 
   // Handle opacity input change
-  const handleOpacityInputChange = useCallback((e, index) => {
+  const handleOpacityInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const newOpacity = parseFloat(e.target.value);
     if (isNaN(newOpacity)) {
       return;
