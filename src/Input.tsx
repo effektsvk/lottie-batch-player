@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { memo, useRef } from 'react'
 import Slider from "react-input-slider";
 import { useDrag, useDrop } from 'react-dnd'
 import type { Identifier, XYCoord } from 'dnd-core'
@@ -6,23 +6,25 @@ import { Player } from './Types';
 import HamburgerIcon from './HamburgerIcon';
 
 type Props = {
-  id: string,
+  fileName: string | null,
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   handleOpacityChange: (pos: { x: number, y: number }) => void
   handleOpacityInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  moveCard: (dragIndex: number, hoverIndex: number) => void
+  id: string,
   index: number,
+  moveCard: (dragIndex: number, hoverIndex: number) => void
   opacity: number,
 }
 
-export const Input = ({
-  id,
+export const Input = memo(({
+  fileName,
   handleFileChange,
   handleOpacityChange,
   handleOpacityInputChange,
-  opacity,
+  id,
   index,
   moveCard,
+  opacity,
 }: Props) => {
   const ref = useRef<HTMLDivElement>(null)
 
@@ -95,15 +97,30 @@ export const Input = ({
       isDragging: monitor.isDragging(),
     }),
   })
-
   const divOpacity = isDragging ? 0 : 1
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileInputClick = () => {
+    fileInputRef.current?.click(); // Trigger file input click
+  };
+
   
   drag(drop(ref))
   return (
     <div ref={ref} key={`Input-div-${id}`} style={{ marginBottom: "20px", cursor: 'move', opacity: divOpacity }} data-handler-id={handlerId}>
       <div style={{display: 'flex', alignItems: 'center'}}>
-        <HamburgerIcon />
-        <input type="file" onChange={(e) => handleFileChange(e)} />
+        <div style={{ marginRight: "4px" }}><HamburgerIcon /></div>
+        <div style={{ minWidth: "400px" }}>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={(e) => handleFileChange(e)}
+            style={{ display: 'none' }} // Hide the actual file input
+          />
+          <button onClick={handleFileInputClick}>Upload File</button>
+          <span style={{ marginLeft: "4px" }}>{fileName}</span>
+        </div>
         <Slider
           axis="x"
           xstep={0.01}
@@ -129,4 +146,4 @@ export const Input = ({
       </div>
     </div>
   )
-}
+})

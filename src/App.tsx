@@ -13,6 +13,7 @@ const generatePlayerData = (index: number): Player => ({
   id: v4(),
   index,
   file: null,
+  fileName: null,
   opacity: 1,
 })
 const generatePlayerDataState = (count: number): Player[] => (
@@ -23,12 +24,9 @@ const generatePlayerDataState = (count: number): Player[] => (
 
 
 export default function App() {
-  // Initial states for all five players
   const [playerData, setPlayerData] = useState<Player[]>(generatePlayerDataState(LIMIT));
   const [numOfShownPlayers, setNumOfShownPlayers] = useState(3);
   const [isFileHovering, setIsFileHovering] = useState(false);
-  // const [files, setFiles] = useState(Array(5).fill(null));
-  // const [opacities, setOpacities] = useState(Array(5).fill(1));
   const lottieRef1 = useRef<LottieRefCurrentProps>(null);
   const lottieRef2 = useRef<LottieRefCurrentProps>(null);
   const lottieRef3 = useRef<LottieRefCurrentProps>(null);
@@ -83,13 +81,12 @@ export default function App() {
       try {
         if (typeof event.target?.result !== 'string') { throw new Error("No target") }
         const jsonObj = JSON.parse(event.target.result);
-        // setFiles((prevFiles) =>
-        //   prevFiles.map((file, i) => (i === index ? jsonObj : file))
-        // );
+        const fileName = e.target.value.split("\\").pop() ?? "no file";
         setPlayerData(
           update(playerData, {
             [index]: {
               file: { $set: jsonObj },
+              fileName: { $set: fileName },
             },
           })
         )
@@ -97,6 +94,7 @@ export default function App() {
         console.log("Error in parsing json", err);
       }
     };
+    if (e.target.files === null) { return; }
     reader.readAsText((e.target.files ?? [])[0]);
   }, [playerData]);
 
@@ -115,9 +113,6 @@ export default function App() {
     if (isNaN(newOpacity)) {
       return;
     }
-    // setOpacities((prevOpacities) =>
-    //   prevOpacities.map((opacity, i) => (i === index ? newOpacity : opacity))
-    // );
     setPlayerData(
       update(playerData, {
         [index]: { opacity: { $set: newOpacity } },
@@ -149,6 +144,7 @@ export default function App() {
           files = update(files, {
             [index]: {
               file: { $set: jsonObj },
+              fileName: { $set: file.name },
             },
           });
         } catch (err) {
@@ -168,7 +164,6 @@ export default function App() {
   const {
     getRootProps,
     getInputProps,
-    isDragActive,
   } = useDropzone({ onDrop, noClick: true, noKeyboard: true });
 
   useEffect(() => {
@@ -230,6 +225,7 @@ export default function App() {
             handleOpacityChange={(pos) => handleOpacityChange(pos, i)}
             handleOpacityInputChange={(e) => handleOpacityInputChange(e, i)}
             index={i}
+            fileName={playerData[i].fileName}
             opacity={playerData[i].opacity}
             moveCard={moveCard} />
         )),
