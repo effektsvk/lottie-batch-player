@@ -1,5 +1,6 @@
 import "./styles.css";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Slider from "react-input-slider";
 import Lottie, { LottieRefCurrentProps } from "lottie-react";
 import update, { Spec } from "immutability-helper";
 import { useDropzone } from 'react-dropzone';
@@ -27,6 +28,7 @@ export default function App() {
   const [playerData, setPlayerData] = useState<Player[]>(generatePlayerDataState(LIMIT));
   const [numOfShownPlayers, setNumOfShownPlayers] = useState(3);
   const [isFileHovering, setIsFileHovering] = useState(false);
+  const [shouldPlayAfterSettingFrame, setShouldPlayAfterSettingFrame] = useState(false);
   const lottieRef1 = useRef<LottieRefCurrentProps>(null);
   const lottieRef2 = useRef<LottieRefCurrentProps>(null);
   const lottieRef3 = useRef<LottieRefCurrentProps>(null);
@@ -37,6 +39,7 @@ export default function App() {
   const lottieRef8 = useRef<LottieRefCurrentProps>(null);
   const lottieRef9 = useRef<LottieRefCurrentProps>(null);
   const lottieRef10 = useRef<LottieRefCurrentProps>(null);
+  const playbackRef = useRef<number | null>(null);
 
   const lottieRefs = [
     lottieRef1,
@@ -62,6 +65,32 @@ export default function App() {
       ref.current?.stop();
     });
   }, []);
+
+  const onPrevFrame = useCallback(() => {
+    lottieRefs.forEach((ref) => {
+      const frame = ref.current?.getDuration(true) ?? 0;
+      ref.current?.goToAndStop(frame - 1, true);
+    });
+  }, []);
+
+  const onNextFrame = useCallback(() => {
+    lottieRefs.forEach((ref) => {
+      const frame = ref.current?.getDuration(true) ?? 0;
+      ref.current?.goToAndStop(frame + 1, true);
+    });
+  }, []);
+
+  const onSetFrame = useCallback((frame: number) => {
+    lottieRefs.forEach((ref) => {
+      if (ref.current) {
+        if (shouldPlayAfterSettingFrame) {
+          ref.current?.goToAndPlay(frame, true)
+        } else {
+          ref.current?.goToAndStop(frame, true)
+        }
+      }
+    });
+  }, [shouldPlayAfterSettingFrame])
 
   const moveCard = useCallback((dragIndex: number, hoverIndex: number) => {
     setPlayerData((prevCards: Player[]) =>
@@ -206,6 +235,11 @@ export default function App() {
                 autoplay={false}
                 animationData={playerData[i].file}
                 style={{ width: 250, height: 250 }}
+                onEnterFrame={(event) => {
+                  if (i === 0) {
+                    console.log(event)
+                  }
+                }}
               />
             )}
           </div>
@@ -282,9 +316,30 @@ export default function App() {
           />
         </div>
         {inputs}
-        <div>
+        <div style={{ display: "flex", flexDirection: "row" }}>
           <button onClick={onPlayClick}>Play</button>
           <button onClick={onStopClick}>Stop</button>
+          <button onClick={onPrevFrame}>-1 frame</button>
+          <button onClick={onNextFrame}>+1 frame</button>
+          <div style={{ marginLeft: 20 }}>
+            <Slider
+              axis="x"
+              xstep={1}
+              xmin={0}
+              xmax={56}
+              x={playbackRef.current ?? 0}
+              onChange={({ x }) => {
+                console.log(x)
+                console.log(playbackRef.current)
+                playbackRef.current = x
+              }}
+              styles={{
+                track: { backgroundColor: "#ccc" },
+                active: { backgroundColor: "#000" },
+                thumb: { width: 20, height: 20 }
+              }}
+            />
+          </div>
         </div>
         {players}
       </div>
