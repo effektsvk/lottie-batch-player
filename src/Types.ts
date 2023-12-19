@@ -4,4 +4,5 @@ export type Player = {
   file: string | null,
   fileName: string | null,
   opacity: number,
+  frames: number,
 }

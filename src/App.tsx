@@ -16,6 +16,7 @@ const generatePlayerData = (index: number): Player => ({
   file: null,
   fileName: null,
   opacity: 1,
+  frames: 0,
 })
 const generatePlayerDataState = (count: number): Player[] => (
   Array(count)
@@ -68,15 +69,18 @@ export default function App() {
 
   const onPrevFrame = useCallback(() => {
     lottieRefs.forEach((ref) => {
-      const frame = ref.current?.getDuration(true) ?? 0;
-      ref.current?.goToAndStop(frame - 1, true);
+      const prevFrame = (ref.current?.getDuration(true) ?? 0) - 1;
+      if (prevFrame <= 0) { return; }
+      ref.current?.goToAndStop(prevFrame, true);
     });
   }, []);
 
   const onNextFrame = useCallback(() => {
     lottieRefs.forEach((ref) => {
-      const frame = ref.current?.getDuration(true) ?? 0;
-      ref.current?.goToAndStop(frame + 1, true);
+      const nextFrame = (ref.current?.getDuration(true) ?? 0) + 1;
+      console.log(nextFrame)
+      if (nextFrame >= playerData[0]?.frames) { return; }
+      ref.current?.goToAndStop(nextFrame, true);
     });
   }, []);
 
@@ -111,11 +115,16 @@ export default function App() {
         if (typeof event.target?.result !== 'string') { throw new Error("No target") }
         const jsonObj = JSON.parse(event.target.result);
         const fileName = e.target.value.split("\\").pop() ?? "no file";
+        const frames = jsonObj?.assets.length ?? 0
+        if (frames === 0) {
+          throw new Error("No frames")
+        }
         setPlayerData(
           update(playerData, {
             [index]: {
               file: { $set: jsonObj },
               fileName: { $set: fileName },
+              frames: { $set: frames },
             },
           })
         )
