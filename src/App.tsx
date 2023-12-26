@@ -1,13 +1,20 @@
 import "./styles.css";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import Slider from "react-input-slider";
 import Lottie, { LottieRefCurrentProps } from "lottie-react";
 import update, { Spec } from "immutability-helper";
-import { useDropzone } from 'react-dropzone';
-import { v4 } from 'uuid';
+import { useDropzone } from "react-dropzone";
+import { v4 } from "uuid";
 import { Input } from "./Input";
 import { Player } from "./Types";
 
-const LIMIT = 10
+const LIMIT = 10;
 
 const generatePlayerData = (index: number): Player => ({
   id: v4(),
@@ -15,18 +22,20 @@ const generatePlayerData = (index: number): Player => ({
   file: null,
   fileName: null,
   opacity: 1,
-})
-const generatePlayerDataState = (count: number): Player[] => (
+  frames: 0,
+});
+const generatePlayerDataState = (count: number): Player[] =>
   Array(count)
     .fill(null)
-    .map((_, index) => (generatePlayerData(index)))
-)
-
+    .map((_, index) => generatePlayerData(index));
 
 export default function App() {
-  const [playerData, setPlayerData] = useState<Player[]>(generatePlayerDataState(LIMIT));
+  const [playerData, setPlayerData] = useState<Player[]>(
+    generatePlayerDataState(LIMIT),
+  );
   const [numOfShownPlayers, setNumOfShownPlayers] = useState(3);
   const [isFileHovering, setIsFileHovering] = useState(false);
+  const [currentFrameState, setCurrentFrameState] = useState(0);
   const lottieRef1 = useRef<LottieRefCurrentProps>(null);
   const lottieRef2 = useRef<LottieRefCurrentProps>(null);
   const lottieRef3 = useRef<LottieRefCurrentProps>(null);
@@ -37,6 +46,7 @@ export default function App() {
   const lottieRef8 = useRef<LottieRefCurrentProps>(null);
   const lottieRef9 = useRef<LottieRefCurrentProps>(null);
   const lottieRef10 = useRef<LottieRefCurrentProps>(null);
+  const playbackRef = useRef<number | null>(null);
 
   const lottieRefs = [
     lottieRef1,
@@ -61,75 +71,138 @@ export default function App() {
     lottieRefs.forEach((ref) => {
       ref.current?.stop();
     });
+    setCurrentFrameState(0);
   }, []);
 
-  const moveCard = useCallback((dragIndex: number, hoverIndex: number) => {
-    setPlayerData((prevCards: Player[]) =>
-      update(prevCards, {
-        $splice: [
-          [dragIndex, 1],
-          [hoverIndex, 0, prevCards[dragIndex] as Player],
-        ],
-      }),
-    )
-  }, [playerData])
+  // const onPrevFrame = useCallback(() => {
+  //   lottieRefs.forEach((ref) => {
+  //     const prevFrame = (ref.current?.getDuration(true) ?? 0) - 1;
+  //     if (prevFrame <= 0) {
+  //       return;
+  //     }
+  //     ref.current?.goToAndStop(prevFrame, true);
+  //   });
+  // }, []);
+
+  // const onNextFrame = useCallback(() => {
+  //   lottieRefs.forEach((ref, index) => {
+  //     console.group(index);
+  //     console.log("CURRENT FRAME");
+  //     const currentFrame = ref.current?.getDuration(true) ?? 0;
+  //     console.log(currentFrame);
+  //     const nextFrame = (ref.current?.getDuration(true) ?? 0) + 1;
+  //     console.log("NEXT FRAME");
+  //     console.log(nextFrame);
+  //     console.log(`PLAYER DATA max frames`);
+  //     console.log(playerData[0]?.frames);
+  //     console.log(`cond: ${nextFrame > playerData[0]?.frames}`);
+  //     if (nextFrame > playerData[0]?.frames) {
+  //       console.log("RETURN");
+  //       return;
+  //     }
+  //     if (ref.current) {
+  //       ref.current.goToAndStop(nextFrame, true);
+  //     }
+  //     console.groupEnd();
+  //   });
+  // }, []);
+
+  const onSetFrame = useCallback((frame: number) => {
+    lottieRefs.forEach((ref) => {
+      if (ref.current) {
+        ref.current?.goToAndStop(frame, true);
+      }
+    });
+  }, []);
+
+  const moveCard = useCallback(
+    (dragIndex: number, hoverIndex: number) => {
+      setPlayerData((prevCards: Player[]) =>
+        update(prevCards, {
+          $splice: [
+            [dragIndex, 1],
+            [hoverIndex, 0, prevCards[dragIndex] as Player],
+          ],
+        }),
+      );
+    },
+    [playerData],
+  );
 
   // Handle file input change
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const reader = new FileReader();
-    reader.onload = function (event) {
-      try {
-        if (typeof event.target?.result !== 'string') { throw new Error("No target") }
-        const jsonObj = JSON.parse(event.target.result);
-        const fileName = e.target.value.split("\\").pop() ?? "no file";
-        setPlayerData(
-          update(playerData, {
-            [index]: {
-              file: { $set: jsonObj },
-              fileName: { $set: fileName },
-            },
-          })
-        )
-      } catch (err) {
-        console.log("Error in parsing json", err);
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+      const reader = new FileReader();
+      reader.onload = function (event) {
+        try {
+          if (typeof event.target?.result !== "string") {
+            throw new Error("No target");
+          }
+          const jsonObj = JSON.parse(event.target.result);
+          const fileName = e.target.value.split("\\").pop() ?? "no file";
+          const frames = jsonObj?.assets.length ?? 0;
+          if (frames === 0) {
+            throw new Error("No frames");
+          }
+          setPlayerData(
+            update(playerData, {
+              [index]: {
+                file: { $set: jsonObj },
+                fileName: { $set: fileName },
+                frames: { $set: frames },
+              },
+            }),
+          );
+        } catch (err) {
+          console.log("Error in parsing json", err);
+        }
+      };
+      if (e.target.files === null) {
+        return;
       }
-    };
-    if (e.target.files === null) { return; }
-    reader.readAsText((e.target.files ?? [])[0]);
-  }, [playerData]);
+      reader.readAsText((e.target.files ?? [])[0]);
+    },
+    [playerData],
+  );
 
   // Handle opacity change
-  const handleOpacityChange = useCallback((pos: { x: number, y: number }, index: number) => {
-    setPlayerData(
-      update(playerData, {
-        [index]: { opacity: { $set: pos.x } },
-      })
-    )
-  }, [playerData]);
+  const handleOpacityChange = useCallback(
+    (pos: { x: number; y: number }, index: number) => {
+      setPlayerData(
+        update(playerData, {
+          [index]: { opacity: { $set: pos.x } },
+        }),
+      );
+    },
+    [playerData],
+  );
 
   // Handle opacity input change
-  const handleOpacityInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, index: number) => {
-    const newOpacity = parseFloat(e.target.value);
-    if (isNaN(newOpacity)) {
-      return;
-    }
-    setPlayerData(
-      update(playerData, {
-        [index]: { opacity: { $set: newOpacity } },
-      })
-    )
-  }, [playerData]);
+  const handleOpacityInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+      const newOpacity = parseFloat(e.target.value);
+      if (isNaN(newOpacity)) {
+        return;
+      }
+      setPlayerData(
+        update(playerData, {
+          [index]: { opacity: { $set: newOpacity } },
+        }),
+      );
+    },
+    [playerData],
+  );
 
   const onDrop = useCallback((acceptedFiles: any) => {
     const handleFiles = async () => {
       let files: Player[] = generatePlayerDataState(acceptedFiles.length);
-      console.log("BEFORE", files);
+      // console.log("BEFORE", files);
 
       const readAsText = (file: Blob): Promise<string> => {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.onabort = () => reject('file reading was aborted');
-          reader.onerror = () => reject('file reading has failed');
+          reader.onabort = () => reject("file reading was aborted");
+          reader.onerror = () => reject("file reading has failed");
           reader.onload = () => resolve(reader.result as string);
           reader.readAsText(file);
         });
@@ -140,11 +213,16 @@ export default function App() {
           const file = acceptedFiles[index];
           const binaryStr = await readAsText(file);
           const jsonObj = JSON.parse(binaryStr);
-          console.log(jsonObj);
+          // console.log(jsonObj);
+          const frames = jsonObj?.assets.length ?? 0;
+          if (frames === 0) {
+            throw new Error("No frames");
+          }
           files = update(files, {
             [index]: {
               file: { $set: jsonObj },
               fileName: { $set: file.name },
+              frames: { $set: frames },
             },
           });
         } catch (err) {
@@ -152,7 +230,12 @@ export default function App() {
         }
       }
 
-      console.log("AFTER", files);
+      // console.log("AFTER", files);
+      const firstFrameCount = files[0].frames;
+      if (!files.every((file) => file.frames === firstFrameCount)) {
+        throw new Error("Animation files have different frame counts");
+      }
+
       setPlayerData(files);
       setNumOfShownPlayers(acceptedFiles.length);
       setIsFileHovering(false);
@@ -160,11 +243,12 @@ export default function App() {
 
     handleFiles();
   }, []);
-  
-  const {
-    getRootProps,
-    getInputProps,
-  } = useDropzone({ onDrop, noClick: true, noKeyboard: true });
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    noClick: true,
+    noKeyboard: true,
+  });
 
   useEffect(() => {
     const handleDragOver = (event: any) => {
@@ -177,13 +261,13 @@ export default function App() {
     };
 
     // Add event listeners to the window
-    window.addEventListener('dragover', handleDragOver);
-    window.addEventListener('dragleave', handleDragLeave);
+    window.addEventListener("dragover", handleDragOver);
+    window.addEventListener("dragleave", handleDragLeave);
 
     return () => {
       // Cleanup the event listeners
-      window.removeEventListener('dragover', handleDragOver);
-      window.removeEventListener('dragleave', handleDragLeave);
+      window.removeEventListener("dragover", handleDragOver);
+      window.removeEventListener("dragleave", handleDragLeave);
     };
   }, []);
 
@@ -197,7 +281,7 @@ export default function App() {
             style={{
               opacity: playerData[i].opacity,
               marginTop: "10px",
-              position: "absolute"
+              position: "absolute",
             }}
           >
             {playerData[i].file && (
@@ -206,11 +290,18 @@ export default function App() {
                 autoplay={false}
                 animationData={playerData[i].file}
                 style={{ width: 250, height: 250 }}
+                onEnterFrame={(event: any) => {
+                  if (i === 0) {
+                    playbackRef.current = event.currentTime;
+                    document.getElementById("frame-count")!.innerText =
+                      `${parseInt(event.currentTime)}/${playerData[0].frames}`;
+                  }
+                }}
               />
             )}
           </div>
         )),
-    [playerData, numOfShownPlayers]
+    [playerData, numOfShownPlayers],
   );
 
   const inputs = useMemo(
@@ -227,30 +318,39 @@ export default function App() {
             index={i}
             fileName={playerData[i].fileName}
             opacity={playerData[i].opacity}
-            moveCard={moveCard} />
+            moveCard={moveCard}
+          />
         )),
-    [handleFileChange, handleOpacityChange, handleOpacityInputChange, playerData, numOfShownPlayers]
+    [
+      handleFileChange,
+      handleOpacityChange,
+      handleOpacityInputChange,
+      playerData,
+      numOfShownPlayers,
+    ],
   );
 
   // Conditional styling for when files are being dragged over
-  const dropzoneStyle = useMemo(() => (
-    isFileHovering
-      ? {
-        top: "calc(50% - 100px)",
-        left: "calc(50% - 250px)",
-        width: "500px",
-        height: "200px",
-        position: "absolute" as const,
-        border: "3px dashed #ccc",
-        padding: "20px",
-        textAlign: "center" as const,
-        alignItems: "center" as const,
-        backgroundColor: "#eee",
-        zIndex: 100,
-        display: "flex",
-      }
-      : { display: "none" }
-  ), [isFileHovering])
+  const dropzoneStyle = useMemo(
+    () =>
+      isFileHovering
+        ? {
+            top: "calc(50% - 100px)",
+            left: "calc(50% - 250px)",
+            width: "500px",
+            height: "200px",
+            position: "absolute" as const,
+            border: "3px dashed #ccc",
+            padding: "20px",
+            textAlign: "center" as const,
+            alignItems: "center" as const,
+            backgroundColor: "#eee",
+            zIndex: 100,
+            display: "flex",
+          }
+        : { display: "none" },
+    [isFileHovering],
+  );
 
   return (
     <div>
@@ -268,23 +368,53 @@ export default function App() {
             step="1"
             value={numOfShownPlayers}
             onChange={(e) => {
-              const newCount = parseInt(e.target.value)
-              setNumOfShownPlayers(newCount)
+              const newCount = parseInt(e.target.value);
+              setNumOfShownPlayers(newCount);
               if (newCount < numOfShownPlayers) {
                 setPlayerData(
                   update(playerData, {
                     $splice: [[newCount, 1, generatePlayerData(newCount)]],
-                  })
-                )
+                  }),
+                );
               }
             }}
             style={{ marginLeft: 20, width: 50 }}
           />
         </div>
         {inputs}
-        <div>
+        <div style={{ display: "flex", flexDirection: "row" }}>
           <button onClick={onPlayClick}>Play</button>
           <button onClick={onStopClick}>Stop</button>
+          {/* <button onClick={onPrevFrame}>-1 frame</button>
+          <button onClick={onNextFrame}>+1 frame</button> */}
+          <div style={{ marginLeft: 20 }}>
+            <Slider
+              axis="x"
+              xstep={1}
+              xmin={0}
+              xmax={56}
+              x={playbackRef.current ?? 0}
+              onChange={({ x }) => {
+                playbackRef.current = x;
+                onSetFrame(playbackRef.current ?? 0);
+              }}
+              onDragEnd={() => {
+                setCurrentFrameState(playbackRef.current ?? 0);
+              }}
+              styles={{
+                track: { backgroundColor: "#ccc" },
+                active: { backgroundColor: "#000" },
+                thumb: { width: 20, height: 20 },
+              }}
+            />
+          </div>
+          {typeof playerData?.[0].frames === "number" ? (
+            <div style={{ marginLeft: 20 }}>
+              <span id="frame-count">{`${0}/${
+                playerData?.[0].frames ?? 0
+              }`}</span>
+            </div>
+          ) : null}
         </div>
         {players}
       </div>
