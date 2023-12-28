@@ -1,4 +1,5 @@
-import "./styles.css";
+"use client";
+
 import React, {
   useCallback,
   useEffect,
@@ -6,13 +7,17 @@ import React, {
   useRef,
   useState,
 } from "react";
-import Slider from "react-input-slider";
-import Lottie, { LottieRefCurrentProps } from "lottie-react";
-import update, { Spec } from "immutability-helper";
+// import Slider from "react-input-slider"; // TODO: refactor to use shadcn
+import Lottie from "lottie-react";
+import type { LottieRefCurrentProps } from "lottie-react";
+import update from "immutability-helper";
 import { useDropzone } from "react-dropzone";
 import { v4 } from "uuid";
-import { Input } from "./Input";
-import { Player } from "./Types";
+import CustomInput from "./CustomInput";
+import { Player } from "./types";
+import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const LIMIT = 10;
 
@@ -29,7 +34,7 @@ const generatePlayerDataState = (count: number): Player[] =>
     .fill(null)
     .map((_, index) => generatePlayerData(index));
 
-export default function App() {
+export default function Home() {
   const [playerData, setPlayerData] = useState<Player[]>(
     generatePlayerDataState(LIMIT),
   );
@@ -46,33 +51,41 @@ export default function App() {
   const lottieRef8 = useRef<LottieRefCurrentProps>(null);
   const lottieRef9 = useRef<LottieRefCurrentProps>(null);
   const lottieRef10 = useRef<LottieRefCurrentProps>(null);
+  /**
+   * @var playbackRef
+   * @description
+   * This is a ref to the current frame of the player. Range: `1 - maxFrames`
+   */
   const playbackRef = useRef<number | null>(null);
 
-  const lottieRefs = [
-    lottieRef1,
-    lottieRef2,
-    lottieRef3,
-    lottieRef4,
-    lottieRef5,
-    lottieRef6,
-    lottieRef7,
-    lottieRef8,
-    lottieRef9,
-    lottieRef10,
-  ];
+  const lottieRefs = useMemo(
+    () => [
+      lottieRef1,
+      lottieRef2,
+      lottieRef3,
+      lottieRef4,
+      lottieRef5,
+      lottieRef6,
+      lottieRef7,
+      lottieRef8,
+      lottieRef9,
+      lottieRef10,
+    ],
+    [],
+  );
 
   const onPlayClick = useCallback(() => {
     lottieRefs.forEach((ref) => {
       ref.current?.play();
     });
-  }, []);
+  }, [lottieRefs]);
 
   const onStopClick = useCallback(() => {
     lottieRefs.forEach((ref) => {
       ref.current?.stop();
     });
     setCurrentFrameState(0);
-  }, []);
+  }, [lottieRefs]);
 
   // const onPrevFrame = useCallback(() => {
   //   lottieRefs.forEach((ref) => {
@@ -107,27 +120,27 @@ export default function App() {
   //   });
   // }, []);
 
-  const onSetFrame = useCallback((frame: number) => {
-    lottieRefs.forEach((ref) => {
-      if (ref.current) {
-        ref.current?.goToAndStop(frame, true);
-      }
-    });
-  }, []);
-
-  const moveCard = useCallback(
-    (dragIndex: number, hoverIndex: number) => {
-      setPlayerData((prevCards: Player[]) =>
-        update(prevCards, {
-          $splice: [
-            [dragIndex, 1],
-            [hoverIndex, 0, prevCards[dragIndex] as Player],
-          ],
-        }),
-      );
+  const onSetFrame = useCallback(
+    (frame: number) => {
+      lottieRefs.forEach((ref) => {
+        if (ref.current) {
+          ref.current?.goToAndStop(frame, true);
+        }
+      });
     },
-    [playerData],
+    [lottieRefs],
   );
+
+  const moveCard = useCallback((dragIndex: number, hoverIndex: number) => {
+    setPlayerData((prevCards: Player[]) =>
+      update(prevCards, {
+        $splice: [
+          [dragIndex, 1],
+          [hoverIndex, 0, prevCards[dragIndex] as Player],
+        ],
+      }),
+    );
+  }, []);
 
   // Handle file input change
   const handleFileChange = useCallback(
@@ -167,10 +180,10 @@ export default function App() {
 
   // Handle opacity change
   const handleOpacityChange = useCallback(
-    (pos: { x: number; y: number }, index: number) => {
+    (pos: number, index: number) => {
       setPlayerData(
         update(playerData, {
-          [index]: { opacity: { $set: pos.x } },
+          [index]: { opacity: { $set: pos } },
         }),
       );
     },
@@ -252,6 +265,7 @@ export default function App() {
 
   useEffect(() => {
     const handleDragOver = (event: any) => {
+      console.log(event);
       event.preventDefault(); // Necessary to allow dropping
       setIsFileHovering(true);
     };
@@ -292,7 +306,7 @@ export default function App() {
                 style={{ width: 250, height: 250 }}
                 onEnterFrame={(event: any) => {
                   if (i === 0) {
-                    playbackRef.current = event.currentTime;
+                    playbackRef.current = event.currentTime + 1;
                     document.getElementById("frame-count")!.innerText =
                       `${parseInt(event.currentTime)}/${playerData[0].frames}`;
                   }
@@ -301,7 +315,7 @@ export default function App() {
             )}
           </div>
         )),
-    [playerData, numOfShownPlayers],
+    [numOfShownPlayers, playerData, lottieRefs],
   );
 
   const inputs = useMemo(
@@ -309,7 +323,7 @@ export default function App() {
       Array(numOfShownPlayers)
         .fill(null)
         .map((_, i) => (
-          <Input
+          <CustomInput
             key={`Input-${playerData[i].id}`}
             id={playerData[i].id}
             handleFileChange={(e) => handleFileChange(e, i)}
@@ -322,46 +336,32 @@ export default function App() {
           />
         )),
     [
+      numOfShownPlayers,
+      playerData,
+      moveCard,
       handleFileChange,
       handleOpacityChange,
       handleOpacityInputChange,
-      playerData,
-      numOfShownPlayers,
     ],
   );
 
-  // Conditional styling for when files are being dragged over
-  const dropzoneStyle = useMemo(
-    () =>
-      isFileHovering
-        ? {
-            top: "calc(50% - 100px)",
-            left: "calc(50% - 250px)",
-            width: "500px",
-            height: "200px",
-            position: "absolute" as const,
-            border: "3px dashed #ccc",
-            padding: "20px",
-            textAlign: "center" as const,
-            alignItems: "center" as const,
-            backgroundColor: "#eee",
-            zIndex: 100,
-            display: "flex",
-          }
-        : { display: "none" },
-    [isFileHovering],
-  );
-
   return (
-    <div>
-      <div {...getRootProps()} style={dropzoneStyle}>
+    <div className="p-4">
+      <div
+        {...getRootProps()}
+        className={
+          isFileHovering
+            ? "absolute left-[calc(50%-250px)] top-[calc(50%-100px)] z-50 flex h-[200px] w-[500px] items-center border-2 border-dashed border-gray-300 bg-gray-200 p-5 text-center"
+            : "hidden"
+        }
+      >
         <input {...getInputProps()} />
-        <p style={{ flex: 1 }}>Drop the files here ...</p>
+        <p className="flex">Drop the files here ...</p>
       </div>
       <div style={{ width: "800px", height: "600px" }}>
-        <div style={{ marginBottom: "10px" }}>
+        <div className="mb-4 flex items-center">
           <span>Number of players</span>
-          <input
+          <Input
             type="number"
             min="0"
             max={LIMIT}
@@ -382,34 +382,40 @@ export default function App() {
           />
         </div>
         {inputs}
-        <div style={{ display: "flex", flexDirection: "row" }}>
-          <button onClick={onPlayClick}>Play</button>
-          <button onClick={onStopClick}>Stop</button>
+        <div className="align-center flex flex-row">
+          <Button onClick={onPlayClick} variant={"outline"} className="mr-2">
+            Play
+          </Button>
+          <Button onClick={onStopClick} variant={"outline"}>
+            Stop
+          </Button>
           {/* <button onClick={onPrevFrame}>-1 frame</button>
           <button onClick={onNextFrame}>+1 frame</button> */}
-          <div style={{ marginLeft: 20 }}>
+          <div className="align-center ml-6 flex">
             <Slider
-              axis="x"
-              xstep={1}
-              xmin={0}
-              xmax={56}
-              x={playbackRef.current ?? 0}
-              onChange={({ x }) => {
+              className="w-96"
+              orientation="horizontal"
+              step={1}
+              min={1}
+              max={56} // TODO: get max frames from playerData
+              value={[playbackRef.current ?? 1]}
+              onValueChange={([x]) => {
                 playbackRef.current = x;
-                onSetFrame(playbackRef.current ?? 0);
+                onSetFrame(playbackRef.current ?? 1);
+                setCurrentFrameState(x);
               }}
-              onDragEnd={() => {
-                setCurrentFrameState(playbackRef.current ?? 0);
+              onValueCommit={([x]) => {
+                setCurrentFrameState(x);
               }}
-              styles={{
-                track: { backgroundColor: "#ccc" },
-                active: { backgroundColor: "#000" },
-                thumb: { width: 20, height: 20 },
-              }}
+              // styles={{
+              //   track: { backgroundColor: "#ccc" },
+              //   active: { backgroundColor: "#000" },
+              //   thumb: { width: 20, height: 20 },
+              // }}
             />
           </div>
           {typeof playerData?.[0].frames === "number" ? (
-            <div style={{ marginLeft: 20 }}>
+            <div className="ml-4 flex items-center">
               <span id="frame-count">{`${0}/${
                 playerData?.[0].frames ?? 0
               }`}</span>
