@@ -19,7 +19,7 @@ import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-const LIMIT = 10;
+const LIMIT = 50;
 
 const generatePlayerData = (index: number): Player => ({
   id: v4(),
@@ -51,6 +51,47 @@ export default function Home() {
   const lottieRef8 = useRef<LottieRefCurrentProps>(null);
   const lottieRef9 = useRef<LottieRefCurrentProps>(null);
   const lottieRef10 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef11 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef12 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef13 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef14 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef15 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef16 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef17 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef18 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef19 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef20 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef21 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef22 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef23 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef24 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef25 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef26 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef27 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef28 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef29 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef30 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef31 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef32 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef33 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef34 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef35 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef36 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef37 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef38 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef39 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef40 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef41 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef42 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef43 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef44 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef45 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef46 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef47 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef48 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef49 = useRef<LottieRefCurrentProps>(null);
+  const lottieRef50 = useRef<LottieRefCurrentProps>(null);
+
   /**
    * @var playbackRef
    * @description
@@ -70,6 +111,46 @@ export default function Home() {
       lottieRef8,
       lottieRef9,
       lottieRef10,
+      lottieRef11,
+      lottieRef12,
+      lottieRef13,
+      lottieRef14,
+      lottieRef15,
+      lottieRef16,
+      lottieRef17,
+      lottieRef18,
+      lottieRef19,
+      lottieRef20,
+      lottieRef21,
+      lottieRef22,
+      lottieRef23,
+      lottieRef24,
+      lottieRef25,
+      lottieRef26,
+      lottieRef27,
+      lottieRef28,
+      lottieRef29,
+      lottieRef30,
+      lottieRef31,
+      lottieRef32,
+      lottieRef33,
+      lottieRef34,
+      lottieRef35,
+      lottieRef36,
+      lottieRef37,
+      lottieRef38,
+      lottieRef39,
+      lottieRef40,
+      lottieRef41,
+      lottieRef42,
+      lottieRef43,
+      lottieRef44,
+      lottieRef45,
+      lottieRef46,
+      lottieRef47,
+      lottieRef48,
+      lottieRef49,
+      lottieRef50,
     ],
     [],
   );
