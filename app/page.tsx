@@ -459,7 +459,7 @@ export default function Home() {
                 );
               }
             }}
-            style={{ marginLeft: 20, width: 50 }}
+            style={{ marginLeft: 20, width: 70 }}
           />
         </div>
         {inputs}
