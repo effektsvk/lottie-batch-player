@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import DragAndDropProvider from "./DragAndDropProvider";
+import { version } from "../package.json";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,6 +20,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <DragAndDropProvider>{children}</DragAndDropProvider>
+        <p className="absolute bottom-4 right-4 text-gray-600/25">v{version}</p>
       </body>
     </html>
   );
