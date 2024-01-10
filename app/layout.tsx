@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import DragAndDropProvider from "./DragAndDropProvider";
-import { version } from "../package.json";
+import packageJson from "../package.json";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,11 +16,21 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const commitDate = new Date(
+    require("child_process").execSync("git log -1 --format=%cd").toString(),
+  );
   return (
     <html lang="en">
       <body className={inter.className}>
         <DragAndDropProvider>{children}</DragAndDropProvider>
-        <p className="absolute bottom-4 right-4 text-gray-600/25">v{version}</p>
+
+        {/* Group container for version and date time */}
+        <div className="group absolute bottom-4 right-4 flex flex-row text-gray-600/25">
+          <span className="mr-2 hidden border-r pr-2 group-hover:block">
+            {commitDate.toLocaleString("sk-SK")}
+          </span>
+          <span>v{packageJson.version}</span>
+        </div>
       </body>
     </html>
   );
