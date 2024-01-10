@@ -478,7 +478,7 @@ export default function Home() {
               orientation="horizontal"
               step={1}
               min={1}
-              max={56} // TODO: get max frames from playerData
+              max={playerData[0].frames ?? 1}
               value={[playbackRef.current ?? 1]}
               onValueChange={([x]) => {
                 playbackRef.current = x;
